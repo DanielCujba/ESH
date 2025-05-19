@@ -1,0 +1,23 @@
+{{ bos_token }}
+{%- set system_prompt_content = "" %} {%- if messages and messages[0].role ==
+'system' %} {%- set system_prompt_content = messages[0].content + "\n" %} {# Add
+a newline for clarity #} {%- endif %} {%- for message in messages %} {%- if
+message.role == 'system' and loop.first %} {# The system prompt's content is
+captured above and will be prepended to the first user message. So, we don't
+render it directly here. #} {%- elif message.role == 'user' %} {%- if loop.first
+or (messages[0].role == 'system' and loop.index0 == 1) %} {# This is the first
+user message. Prepend the system_prompt_content if it exists. #}
+{{ "[INST] " + system_prompt_content + message.content + " [/INST]" }}
+{%- else %} {# This is a subsequent user message. #}
+{{ "[INST] " + message.content + " [/INST]" }}
+{%- endif %} {%- elif message.role == 'assistant' %}
+{{ message.content + eos_token }}
+{%- else %}
+{{
+  raise_exception(
+    'Unsupported role: "' +
+      message.role +
+      '". This template only supports "user", "assistant", and an initial "system" role.'
+  )
+}}
+{%- endif %} {%- endfor %}
